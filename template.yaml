@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-example-function
+  
+  Sample SAM Template for sam-example-function
+
+Globals:
+  Function:
+    Timeout: 5
+
+Resources:
+  # Lambda
+  ExampleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: example-function/
+      Handler: example-function
+      Runtime: go1.x
+      Architectures:
+        - x86_64
+      Role: 
+        !GetAtt ExampleApigwRole.Arn
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Method: post
+            Path: /data
+            RestApiId: !Ref ExampleApigw
+
+  # APIGateway
+  ExampleApigw:
+    Type: AWS::Serverless::Api
+    Properties:
+      Auth:
+        DefaultAuthorizer: CognitoAuth
+        Authorizers:
+          CognitoAuth:
+            AuthorizationScopes:
+            UserPoolArn: ***
+            Identity:
+              Header: '***'
+      DisableExecuteApiEndpoint: false
+      Domain:
+        DomainName: ***
+        CertificateArn: ***
+        EndpointConfiguration: REGIONAL
+        Route53:
+          HostedZoneId: ***
+      Name: ExampleApigw
+      StageName: dev
+
+  # Lambda用IAMRole
+  ExampleApigwRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: "sts:AssumeRole"
+            Principal:
+              Service: lambda.amazonaws.com
+      Policies:
+        - PolicyName: sam-example-apigw-policy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "dynamodb:ListStreams"
+                  - "dynamodb:GetShardIterator"
+                  - "dynamodb:GetRecords"
+                  - "dynamodb:DescribeStream"
+                Resource: "*"
