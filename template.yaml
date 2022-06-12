@@ -20,13 +20,13 @@ Resources:
       Architectures:
         - x86_64
       Role: 
-        !GetAtt ExampleApigwRole.Arn
+        !GetAtt ExampleFunctionRole.Arn
       Events:
         ApiEvent:
           Type: Api
           Properties:
             Method: post
-            Path: /data
+            Path: /data/{pathparam}
             RestApiId: !Ref ExampleApigw
 
   # APIGateway
@@ -40,8 +40,8 @@ Resources:
             AuthorizationScopes:
             UserPoolArn: ***
             Identity:
-              Header: '***'
-      DisableExecuteApiEndpoint: false
+              Header: 'Authorization'
+      DisableExecuteApiEndpoint: true
       Domain:
         DomainName: ***
         CertificateArn: ***
@@ -52,7 +52,7 @@ Resources:
       StageName: dev
 
   # Lambda用IAMRole
-  ExampleApigwRole:
+  ExampleFunctionRole:
     Type: AWS::IAM::Role
     Properties: 
       AssumeRolePolicyDocument:
@@ -69,8 +69,12 @@ Resources:
             Statement:
               - Effect: "Allow"
                 Action:
-                  - "dynamodb:ListStreams"
-                  - "dynamodb:GetShardIterator"
-                  - "dynamodb:GetRecords"
-                  - "dynamodb:DescribeStream"
-                Resource: "*"
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+  # Lambda用LogGroup
+  ExampleLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ExampleFunction}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -15,6 +16,7 @@ type Response struct {
 }
 
 func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	fmt.Println(request)
 	method := request.HTTPMethod
 	body := request.Body
 	pathParam := request.PathParameters["pathparam"]
